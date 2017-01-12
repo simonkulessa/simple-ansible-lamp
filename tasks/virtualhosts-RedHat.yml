@@ -1,0 +1,40 @@
+---
+
+- name: create virtual hosts
+  copy: src=../templates/virtualhost.j2 dest=/etc/httpd/conf.d/{{ item.name }}.conf
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: create document root for virtual hosts
+  file: path={{ item.name }} state=directory owner={{ item.owner }} group={{ item.group }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace virtualhost servername
+  replace: dest=/etc/httpd/conf.d/{{ item.name }}.conf regexp='var_servername' replace="{{ item.name }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace virtualhost document root
+  replace: dest=/etc/httpd/conf.d/{{ item.name }}.conf regexp='var_docroot' replace="{{ item.docroot }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate path
+  replace: dest=/etc/httpd/conf.d/{{ item.name }}.conf regexp='var_sslpath' replace="{{ item.sslpath }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate crt
+  replace: dest=/etc/httpd/conf.d/{{ item.name }}.conf regexp='var_certificatecrt' replace="{{ item.sslcertificatefile }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate crt
+  replace: dest=/etc/httpd/conf.d/{{ item.name }}.conf regexp='var_certificatekey' replace="{{ item.sslcertificatekeyfile }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: copy ssl certificate file
+  copy: src=../files/{{ item.sslcertificatefile }} dest={{ item.sslpath }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: copy ssl certificate key file
+  copy: src=../files/{{ item.sslcertificatekeyfile }} dest={{ item.sslpath }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: restart apache2
+  service: name=httpd state=restarted

@@ -1,0 +1,55 @@
+---
+
+- name: create virtual hosts
+  copy: src=../templates/virtualhost.j2 dest=/etc/apache2/sites-available/{{ item.name }}.conf
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: create document root for virtual hosts
+  file: path={{ item.docroot }} state=directory owner={{ item.owner }} group={{ item.group }} recurse=yes
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: change ownership of {{ item.docpath }} to {{ item.owner }} / {{ item.group }}
+  file: path={{ item.docpath }} state=directory owner={{ item.owner }} group={{ item.group }} recurse=yes
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace virtualhost servername
+  replace: dest=/etc/apache2/sites-available/{{ item.name }}.conf regexp='var_servername' replace="{{ item.name }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace virtualhost document root
+  replace: dest=/etc/apache2/sites-available/{{ item.name }}.conf regexp='var_docroot' replace="{{ item.docroot }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate path
+  replace: dest=/etc/apache2/sites-available/{{ item.name }}.conf regexp='var_sslpath' replace="{{ item.sslpath }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate crt
+  replace: dest=/etc/apache2/sites-available/{{ item.name }}.conf regexp='var_certificatecrt' replace="{{ item.sslcertificatefile }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: replace ssl certificate crt
+  replace: dest=/etc/apache2/sites-available/{{ item.name }}.conf regexp='var_certificatekey' replace="{{ item.sslcertificatekeyfile }}"
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: copy ssl certificate file
+  copy: src=../files/{{ item.sslcertificatefile }} dest={{ item.sslpath }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: copy ssl certificate key file
+  copy: src=../files/{{ item.sslcertificatekeyfile }} dest={{ item.sslpath }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: activate apache2 virtualhosts
+  file: src=/etc/apache2/sites-available/{{ item.name }}.conf dest=/etc/apache2/sites-enabled/{{ item.name }}.conf state=link
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: remove default apache2 virtual hosts
+  file: dest=/etc/apache2/sites-enabled/000-default.conf state=absent
+
+- name: copy phpinfo file
+  copy: src=../files/phpinfo.php dest={{ item.docroot }}/phpinfo.php owner={{ item.owner }} group={{ item.group }}
+  with_items: "{{ apache2_virtualhosts }}"
+
+- name: restart apache2
+  service: name=apache2 state=restarted
