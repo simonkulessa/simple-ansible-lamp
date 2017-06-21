@@ -1,0 +1,49 @@
+<VirtualHost *:80>
+
+       	ServerName var_servername
+       	ServerAdmin webmaster@move-elevator.dev
+
+       	DocumentRoot var_docroot
+
+       	<Directory "var_docroot/">
+       		Options ExecCGI FollowSymLinks
+       		AllowOverride All
+       		Order allow,deny
+       		Allow from All
+       	</Directory>
+
+       	ErrorLog "/var/log/apache2/var_servername_error.log"
+       	CustomLog "/var/log/apache2/var_servername_access.log" combined
+
+       	ServerSignature Off
+
+</VirtualHost>
+
+<VirtualHost *:443>
+        ServerName var_servername
+        ServerAdmin webmaster@move-elevator.dev
+
+        Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+        DocumentRoot var_docroot
+
+        <Directory "var_docroot/">
+          Options ExecCGI FollowSymLinks
+          AllowOverride All
+          Order allow,deny
+          Allow from All
+        </Directory>
+
+        ErrorLog "/var/log/apache2/var_servername_error.log"
+        CustomLog "/var/log/apache2/var_servername_access.log" combined
+
+        ServerSignature Off
+
+       	SSLEngine on
+        SSLProtocol All -SSLv2 -SSLv3
+        SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+
+       	SSLCertificateFile /etc/ssl/localcerts/move_elevator_dev.crt
+       	SSLCertificateKeyFile /etc/ssl/localcerts/move_elevator_dev.key
+
+</VirtualHost>
